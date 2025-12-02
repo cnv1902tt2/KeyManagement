@@ -11,11 +11,14 @@ from .routers.keys import router as keys_router
 
 app = FastAPI(title=settings.APP_NAME)
 
-origins = [settings.CORS_ORIGINS] if settings.CORS_ORIGINS else ["*"]
+# Configure CORS
+raw_origins = settings.CORS_ORIGINS or "*"
+origins = [o.strip() for o in raw_origins.split(",") if o.strip()] if isinstance(raw_origins, str) else raw_origins
+allow_credentials = False if "*" in origins else True
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
-    allow_credentials=True,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -41,3 +44,7 @@ app.include_router(keys_router)
 @app.get("/")
 def root():
     return {"status": "ok"}
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
